@@ -200,9 +200,10 @@ const resetToken = async (req, res, next) => {
 
     En même temps, c'est tellement compliqué de retenir tous ces mots de passe 😊.
 
-    Pour vous simplifier la vie, il vous suffit de cliquer sur ce <a href="http://localhost:3000/reset/${
-      existingUser.resetToken
-    }">lien</a> pour en regénérer un autre.
+    Pour vous simplifier la vie, il vous suffit de cliquer sur ce <a href="${
+      process.env.FRONTEND_URL
+    }/reset/${existingUser.resetToken}"
+    >lien</a> pour en regénérer un autre.
       `
       ),
     });
