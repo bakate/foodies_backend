@@ -93,7 +93,10 @@ const getSingleRecipeById = async (req, res, next) => {
   }
   if (!recipe) {
     return next(
-      new HttpError("Il n'y a pas Recette avec l'identifiant fourni", 404)
+      new HttpError(
+        "Nous n'avons pas trouvé de recettes avec cet utilisateur",
+        404
+      )
     );
   }
   res.json({ recipe: recipe.toObject({ getters: true }), success: true });
