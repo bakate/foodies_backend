@@ -24,6 +24,6 @@ router.patch(
   checkAuth,
   userController.updateProfileUser
 );
-router.get('/profile/:uid', checkAuth, userController.getProfileUser);
+router.get('/profile/:uid', userController.getProfileUser);
 
 module.exports = router;
