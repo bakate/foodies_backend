@@ -19,11 +19,7 @@ router.post(
 router.post('/login', userController.login);
 router.post('/reset', userController.resetToken);
 router.post('/reset/:token', userController.resetPassword);
-router.patch(
-  '/profile/update/:uid',
-  checkAuth,
-  userController.updateProfileUser
-);
-router.get('/profile/:uid', userController.getProfileUser);
+router.get('/profile/:uid', userController.getProfile);
+router.patch('/profile/update/:uid', checkAuth, userController.updateProfile);
 
 module.exports = router;

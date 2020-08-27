@@ -274,7 +274,7 @@ const resetPassword = async (req, res, next) => {
   res.json({ token: newToken, userId: user.id, success: true });
 };
 
-const getProfileUser = async (req, res, next) => {
+const getProfile = async (req, res, next) => {
   const {
     params: { uid },
   } = req;
@@ -297,7 +297,7 @@ const getProfileUser = async (req, res, next) => {
   res.json({ user: user.toObject({ getters: true }), success: true });
 };
 
-const updateProfileUser = async (req, res, next) => {
+const updateProfile = async (req, res, next) => {
   const {
     params: { uid },
   } = req;
@@ -338,7 +338,7 @@ const updateProfileUser = async (req, res, next) => {
     );
   }
 
-  res.json({ success: true });
+  res.json({ message: 'Votre profil est bien mis à jour', success: true });
 };
 module.exports = {
   signup,
@@ -346,6 +346,6 @@ module.exports = {
   getUsers,
   resetToken,
   resetPassword,
-  getProfileUser,
-  updateProfileUser,
+  getProfile,
+  updateProfile,
 };
