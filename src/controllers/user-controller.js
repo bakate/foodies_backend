@@ -273,4 +273,79 @@ const resetPassword = async (req, res, next) => {
 
   res.json({ token: newToken, userId: user.id, success: true });
 };
-module.exports = { signup, login, getUsers, resetToken, resetPassword };
+
+const getProfileUser = async (req, res, next) => {
+  const {
+    params: { uid },
+  } = req;
+  let user;
+  try {
+    user = await User.findById(uid);
+  } catch (err) {
+    return next(
+      new HttpError("Quelque chose s'est mal déroulée. Réessayez encore.", 500)
+    );
+  }
+  if (!user) {
+    return next(
+      new HttpError(
+        "Désolé, Il n'exisite pas de compte avec cet identifiant.",
+        404
+      )
+    );
+  }
+  res.json({ user: user.toObject({ getters: true }), success: true });
+};
+
+const updateProfileUser = async (req, res, next) => {
+  const {
+    params: { uid },
+  } = req;
+  const { username, images } = req.body;
+
+  let user;
+  try {
+    user = await User.findById(uid);
+  } catch (err) {
+    return next(
+      new HttpError("Quelque chose s'est mal déroulée. Réessayez encore.", 500)
+    );
+  }
+  if (!user) {
+    return next(
+      new HttpError(
+        "Désolé, Il n'exisite pas de compte à mettre à jour avec cet identifiant.",
+        404
+      )
+    );
+  }
+  if (user.id.toString() !== req.userData.userId) {
+    return next(
+      new HttpError(
+        "Malheureusement, vous n'êtes pas autorisé à mettre à jour ce profil.",
+        422
+      )
+    );
+  }
+  user.username = username;
+  user.images = images;
+
+  try {
+    await user.save();
+  } catch (err) {
+    return next(
+      new HttpError("Quelque chose s'est mal déroulée. Réessayez papi", 500)
+    );
+  }
+
+  res.json({ success: true });
+};
+module.exports = {
+  signup,
+  login,
+  getUsers,
+  resetToken,
+  resetPassword,
+  getProfileUser,
+  updateProfileUser,
+};

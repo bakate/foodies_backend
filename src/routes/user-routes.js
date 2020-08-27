@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { check } = require('express-validator');
 const userController = require('../controllers/user-controller');
+const checkAuth = require('../middleware/auth');
 
 router.get('/', userController.getUsers);
 
@@ -18,5 +19,11 @@ router.post(
 router.post('/login', userController.login);
 router.post('/reset', userController.resetToken);
 router.post('/reset/:token', userController.resetPassword);
+router.patch(
+  '/profile/update/:uid',
+  checkAuth,
+  userController.updateProfileUser
+);
+router.get('/profile/:uid', checkAuth, userController.getProfileUser);
 
 module.exports = router;
