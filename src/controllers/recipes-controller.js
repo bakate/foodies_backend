@@ -112,10 +112,11 @@ const getRecipesByUserId = async (req, res, next) => {
       .populate('recipes');
   } catch (err) {
     return next(
-      new HttpError("Quelque chose s'est mal déroulé. Réessayez encore.", 500)
+      new HttpError("Quelque chose s'est mal déroulée. Réessayez encore.", 500)
     );
   }
-  if (!userWithRecipes || !userWithRecipes.recipes.length) {
+  // if (!userWithRecipes || !userWithRecipes.recipes.length) {
+  if (!userWithRecipes) {
     return next(
       new HttpError(
         'Désolé, aucune recette de trouvée avec cet identifiant',
