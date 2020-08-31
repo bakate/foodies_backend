@@ -93,12 +93,12 @@ const signup = async (req, res, next) => {
       \r\r
 
      En attendant, j'espère vous retrouver rapidement sur la plate-forme pour partager vos différentes recettes.\r\r
-     Oui, oui,je sais que vous aimez bien cuisiner !
+     Oui, oui, je sais que vous aimez bien cuisiner !
       `
       ),
     });
   } catch (err) {
-    return next(err);
+    console.log(err);
   }
 
   res.status(201).json({
@@ -203,7 +203,7 @@ const resetToken = async (req, res, next) => {
     Pour vous simplifier la vie, il vous suffit de cliquer sur ce <a href="${
       process.env.FRONTEND_URL
     }/reset/${existingUser.resetToken}"
-    >lien</a> pour en regénérer un autre.
+    >lien</a> dans l'heure qui suit, pour en regénérer un autre.
       `
       ),
     });

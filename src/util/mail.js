@@ -1,13 +1,21 @@
 const nodemailer = require('nodemailer');
-const sendGridTransport = require('nodemailer-sendgrid-transport');
+// const sendGridTransport = require('nodemailer-sendgrid-transport');
 
-const transport = nodemailer.createTransport(
-  sendGridTransport({
-    auth: {
-      api_key: process.env.SENDGRID_KEY,
-    },
-  })
-);
+// const transport = nodemailer.createTransport(
+//   sendGridTransport({
+//     auth: {
+//       api_key: process.env.SENDGRID_KEY,
+//     },
+//   })
+// );
+
+const transport = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GOOGLE_EMAIL,
+    pass: process.env.GOOGLE_PASSWORD,
+  },
+});
 
 const makeANiceEmail = (user, text) => `
 <div style="
