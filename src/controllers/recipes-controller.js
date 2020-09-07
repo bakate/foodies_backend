@@ -4,16 +4,20 @@ const Recipe = require('../models/recipe');
 const HttpError = require('../models/httpError');
 const User = require('../models/user');
 
-// const getAllRecipes = async (req, res, next) => {
-//   let allRecipes;
-//   try {
-//     allRecipes = await Recipe.find({});
-//   } catch (err) {
-//     return next(
-//       new HttpError('Something went wrong. Please Try again later.', 500)
-//     );
-//   }
-// };
+const getAllRecipes = async (req, res, next) => {
+  let allRecipes;
+  try {
+    allRecipes = await Recipe.find({});
+  } catch (err) {
+    return next(
+      new HttpError('Something went wrong. Please Try again later.', 500)
+    );
+  }
+  res.json({
+    recipes: allRecipes.map(recipe => recipe.toObject({ getters: true })),
+    success: true,
+  });
+};
 const createRecipe = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -223,6 +227,7 @@ const deleteRecipe = async (req, res, next) => {
 };
 
 module.exports = {
+  getAllRecipes,
   getSingleRecipeById,
   getRecipesByUserId,
   updateRecipe,
