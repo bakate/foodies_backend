@@ -16,5 +16,9 @@
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "peacock.color": "#215732",
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "cSpell.ignoreWords": [
+    "forgotpassword",
+    "resetpassword"
+  ]
 }

@@ -3,11 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { randomBytes } = require('crypto');
 const { promisify } = require('util');
+const { OAuth2Client } = require('google-auth-library');
 const HttpError = require('../models/httpError');
 const User = require('../models/user');
 const { transport, makeANiceEmail } = require('../util/mail');
 
-const getUsers = async (req, res, next) => {
+const getUsersController = async (req, res, next) => {
   let users;
   try {
     users = await User.find({}, '-password');
@@ -22,15 +23,14 @@ const getUsers = async (req, res, next) => {
   });
 };
 
-const signup = async (req, res, next) => {
+const signupController = async (req, res, next) => {
+  const { username, email, password } = req.body;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(
-      new HttpError('Les données fournies sont incorrectes. Réessayez', 422)
-    );
+    const err = Object.values(errors.errors).find(el => el.msg).msg;
+    return next(new HttpError(err, 422));
   }
 
-  const { username, email, password, images } = req.body;
   let existingUser;
   try {
     existingUser = await User.findOne({ email });
@@ -58,10 +58,7 @@ const signup = async (req, res, next) => {
     username,
     email,
     password: hashedPassword,
-    images,
     recipes: [],
-    resetToken: null,
-    resetTokenExpiry: null,
   });
 
   try {
@@ -88,13 +85,13 @@ const signup = async (req, res, next) => {
       html: makeANiceEmail(
         createdNewUser.username,
         `
-    Merci pour votre inscription ! Je suis heureux de vous compter parmi nous !\n
-    Je suis Bakate et je serai votre interlocuteur pour toutes vos questions éventuelles 😎.
-      \r\r
+        Merci pour votre inscription ! Je suis heureux de vous compter parmi nous !\n
+        Je suis Bakate et je serai votre interlocuteur pour toutes vos questions éventuelles 😎.
+        \r\r
 
-     En attendant, j'espère vous retrouver rapidement sur la plate-forme pour partager vos différentes recettes.\r\r
-     Oui, oui, je sais que vous aimez bien cuisiner !
-      `
+        En attendant, j'espère vous retrouver rapidement sur la plate-forme pour partager vos différentes recettes.\r\r
+        Oui, oui, je sais que vous aimez bien cuisiner !
+        `
       ),
     });
   } catch (err) {
@@ -104,13 +101,19 @@ const signup = async (req, res, next) => {
   res.status(201).json({
     userId: createdNewUser.id,
     email: createdNewUser.email,
+    username: createdNewUser.username,
     token,
     success: true,
   });
 };
 
-const login = async (req, res, next) => {
+const loginController = async (req, res, next) => {
   const { email, password } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const err = Object.values(errors.errors).find(el => el.msg).msg;
+    return next(new HttpError(err, 422));
+  }
 
   let existingUser;
   try {
@@ -122,7 +125,7 @@ const login = async (req, res, next) => {
     return next(
       new HttpError(
         `Il n'esiste pas de compte avec: ${email}.
-         inscrivez-vous plutôt.`,
+        inscrivez-vous plutôt.`,
         403
       )
     );
@@ -155,13 +158,101 @@ const login = async (req, res, next) => {
   res.status(201).json({
     userId: existingUser.id,
     email: existingUser.email,
+    username: existingUser.username,
     token,
     success: true,
   });
 };
 
-const resetToken = async (req, res, next) => {
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// Google Login
+const googleController = async (req, res, next) => {
+  const { idToken } = req.body;
+  const {
+    payload: { email_verified, picture, given_name, email },
+  } = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+  let user;
+  let token;
+  if (email_verified) {
+    try {
+      user = await User.findOne({ email });
+    } catch (err) {
+      return next(new HttpError('la connexion a échouée. Réessayez', 500));
+    }
+
+    if (user) {
+      const { _id: userId, username } = user;
+      try {
+        token = jwt.sign(
+          {
+            userId,
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: '1h' }
+        );
+      } catch (err) {
+        return next(new HttpError('la connexion a échouée. Réessayez', 500));
+      }
+      return res.status(201).json({ token, userId, username, success: true });
+    }
+    const password = `${Date.now().toString()}${email}-&@&${Date.now()}`;
+    user = new User({ username: given_name, email, password, avatar: picture });
+    try {
+      await user.save();
+    } catch (err) {
+      return next(
+        new HttpError(
+          "Erreur lors de l'enregistrement avec Google. Réessayez",
+          400
+        )
+      );
+    }
+    token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    try {
+      await transport.sendMail({
+        to: user.email,
+        from: 'bakatebadevpro@gmail.com',
+        subject: 'Bienvenue @Foodies',
+        html: makeANiceEmail(
+          user.username,
+          `
+        Merci pour votre inscription ! Je suis heureux de vous compter parmi nous !\n
+        Je suis Bakate et je serai votre interlocuteur pour toutes vos questions éventuelles 😎.
+        \r\r
+
+        En attendant, j'espère vous retrouver rapidement sur la plate-forme pour partager vos différentes recettes.\r\r
+        Oui, oui, je sais que vous aimez bien cuisiner !
+        `
+        ),
+      });
+    } catch (err) {
+      console.log(err);
+    }
+    res.json({
+      token,
+      userId: user._id,
+      username: user.username,
+      success: true,
+    });
+  } else {
+    return next(new HttpError('Echec de connexion via Google. Réessayez', 400));
+  }
+  // res.redirect(`${process.env.FRONTEND_URL}?${token}`);
+};
+
+const forgotPasswordController = async (req, res, next) => {
   const { email } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const err = Object.values(errors.errors).find(el => el.msg).msg;
+    return next(new HttpError(err, 422));
+  }
   let existingUser;
   try {
     existingUser = await User.findOne({ email });
@@ -202,7 +293,7 @@ const resetToken = async (req, res, next) => {
 
     Pour vous simplifier la vie, il vous suffit de cliquer sur ce <a href="${
       process.env.FRONTEND_URL
-    }/reset/${existingUser.resetToken}"
+    }/resetpassword/${existingUser.resetToken}"
     >lien</a> dans l'heure qui suit, pour en regénérer un autre.
       `
       ),
@@ -215,12 +306,17 @@ const resetToken = async (req, res, next) => {
   });
 };
 
-const resetPassword = async (req, res, next) => {
+const resetPasswordController = async (req, res, next) => {
+  const { password, confirmedPassword } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const err = Object.values(errors.errors).find(el => el.msg).msg;
+    return next(new HttpError(err, 422));
+  }
   const {
     params: { token },
   } = req;
-  const { password, confirmPassword } = req.body;
-  if (password !== confirmPassword) {
+  if (password !== confirmedPassword) {
     return next(
       new HttpError('Les mots de passe ne sont pas identiques. Réessayez', 422)
     );
@@ -274,7 +370,7 @@ const resetPassword = async (req, res, next) => {
   res.json({ token: newToken, userId: user.id, success: true });
 };
 
-const getProfile = async (req, res, next) => {
+const getProfileController = async (req, res, next) => {
   const {
     params: { uid },
   } = req;
@@ -297,11 +393,11 @@ const getProfile = async (req, res, next) => {
   res.json({ user: user.toObject({ getters: true }), success: true });
 };
 
-const updateProfile = async (req, res, next) => {
+const updateProfileController = async (req, res, next) => {
   const {
     params: { uid },
   } = req;
-  const { username, images } = req.body;
+  const { username, avatar } = req.body;
 
   let user;
   try {
@@ -328,7 +424,7 @@ const updateProfile = async (req, res, next) => {
     );
   }
   user.username = username;
-  user.images = images;
+  user.avatar = avatar;
 
   try {
     await user.save();
@@ -340,12 +436,14 @@ const updateProfile = async (req, res, next) => {
 
   res.json({ message: 'Votre profil est bien mis à jour', success: true });
 };
+
 module.exports = {
-  signup,
-  login,
-  getUsers,
-  resetToken,
-  resetPassword,
-  getProfile,
-  updateProfile,
+  signupController,
+  loginController,
+  getUsersController,
+  forgotPasswordController,
+  resetPasswordController,
+  getProfileController,
+  updateProfileController,
+  googleController,
 };

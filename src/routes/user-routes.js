@@ -1,25 +1,54 @@
 const router = require('express').Router();
-const { check } = require('express-validator');
-const userController = require('../controllers/user-controller');
+const {
+  loginValidator,
+  resetPasswordValidator,
+  signupValidator,
+  forgotPasswordValidator,
+} = require('../middleware/validators');
+
+const {
+  googleController,
+  loginController,
+  getUsersController,
+  signupController,
+  forgotPasswordController,
+  resetPasswordController,
+  getProfileController,
+  updateProfileController,
+} = require('../controllers/user-controller');
 const checkAuth = require('../middleware/auth');
 
-router.get('/', userController.getUsers);
+// router.get(
+//   '/google',
+//   passport.authenticate('google', { scope: ['profile', 'email'] })
+// );
+// router.get(
+//   '/google/callback',
+//   passport.authenticate('google', {
+//     failureRedirect: process.env.FRONT_URL,
+//   }),
+//   googleController
+// );
 
+// router.get('/google',goToGoogle);
+// router.get('/google/callback',googleController);
+
+router.get('/', getUsersController);
+
+router.post('/signup', signupValidator, signupController);
+router.post('/login', loginValidator, loginController);
 router.post(
-  '/signup',
-  [
-    check('username').notEmpty(),
-    check('email')
-      .normalizeEmail()
-      .isEmail(),
-    check('password').isLength({ min: 6 }),
-  ],
-  userController.signup
+  '/forgotpassword',
+  forgotPasswordValidator,
+  forgotPasswordController
 );
-router.post('/login', userController.login);
-router.post('/reset', userController.resetToken);
-router.post('/reset/:token', userController.resetPassword);
-router.get('/profile/:uid', userController.getProfile);
-router.patch('/profile/update/:uid', checkAuth, userController.updateProfile);
+router.post('/googlelogin', googleController);
+router.post(
+  '/resetpassword/:token',
+  resetPasswordValidator,
+  resetPasswordController
+);
+router.get('/profile/:uid', getProfileController);
+router.patch('/profile/update/:uid', checkAuth, updateProfileController);
 
 module.exports = router;

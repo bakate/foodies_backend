@@ -4,30 +4,25 @@ const uniqueValidator = require('mongoose-unique-validator');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
+    trim: true,
     required: true,
   },
   email: {
     type: String,
+    trim: true,
     required: true,
     unique: true,
+    lowercase: true,
   },
   password: {
     type: String,
     required: true,
-    minLength: 6,
   },
-  images: {
-    regularImage: {
-      type: String,
-      required: true,
-    },
-    largeImage: {
-      type: String,
-      required: true,
-    },
-  },
-  resetToken: String,
   resetTokenExpiry: Date,
+  resetToken: String,
+  avatar: {
+    type: String,
+  },
   recipes: [
     {
       type: mongoose.Types.ObjectId,

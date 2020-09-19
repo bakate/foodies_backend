@@ -1,7 +1,12 @@
 const express = require('express');
-
+const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
+const cors = require('cors');
+const morgan = require('morgan');
 const HttpError = require('./models/httpError');
 const connectDB = require('./config/db');
+//* ---------------------------------------- END OF IMPORTS---------------------------------------------------
 
 //* Starting MongoDB
 connectDB();
@@ -11,6 +16,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const port = process.env.PORT || 5000;
+
+//* Sessions
+app.use(
+  session({
+    secret: process.env.COOKIE_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 3_600_000 },
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+  })
+);
 
 //* Communication with a React/Vue or whatever
 app.use((req, res, next) => {
@@ -23,6 +39,14 @@ app.use((req, res, next) => {
   next();
 });
 
+if (process.env.NODE_ENV === 'development') {
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_URL,
+    })
+  );
+  app.use(morgan('dev'));
+}
 //* ROUTES
 app.use('/api/recipes', require('./routes/recipes-routes'));
 app.use('/api/auth', require('./routes/user-routes'));
@@ -33,9 +57,6 @@ app.use((req, res, next) =>
 );
 
 app.use((error, req, res, next) => {
-  // if (req.file) {
-  //   fs.unlink(req.file.path, (err) => console.log(err));
-  // }
   if (res.headerSent) {
     next(error);
   }

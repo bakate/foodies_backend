@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
     const token = req.headers.authorization.split(' ')[1];
 
     if (!token) {
-      throw new Error('Authentication failed');
+      throw new Error('Authentication failed, no token found');
     }
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     console.log(decodedToken);
@@ -19,3 +19,18 @@ module.exports = (req, res, next) => {
     next(new HttpError('Authentication failed', 401));
   }
 };
+
+// module.exports = {
+//   ensureAuth(req, res, next) {
+//     if (req.isAuthenticated()) {
+//       return next()
+//     }
+//     res.redirect('/')
+//   },
+//   ensureGuest(req, res, next) {
+//     if (!req.isAuthenticated()) {
+//       return next()
+//     }
+//     res.redirect('/dashboard')
+//   },
+// }
