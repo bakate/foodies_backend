@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema({
   resetToken: String,
   avatar: {
     type: String,
+    default:
+      'https://res.cloudinary.com/bakate/image/upload/v1600522048/fullstackProject/vjo3f3vbpqdc4npdnnzm.jpg',
   },
   recipes: [
     {
