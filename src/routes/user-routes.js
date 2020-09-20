@@ -18,21 +18,6 @@ const {
 } = require('../controllers/user-controller');
 const checkAuth = require('../middleware/auth');
 
-// router.get(
-//   '/google',
-//   passport.authenticate('google', { scope: ['profile', 'email'] })
-// );
-// router.get(
-//   '/google/callback',
-//   passport.authenticate('google', {
-//     failureRedirect: process.env.FRONT_URL,
-//   }),
-//   googleController
-// );
-
-// router.get('/google',goToGoogle);
-// router.get('/google/callback',googleController);
-
 router.get('/', getUsersController);
 
 router.post('/signup', signupValidator, signupController);

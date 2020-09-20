@@ -19,13 +19,6 @@ const getAllRecipes = async (req, res, next) => {
   });
 };
 const createRecipe = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return next(
-      new HttpError('Les données fournies sont incorrectes. Réessayez', 422)
-    );
-  }
-
   const {
     title,
     ingredients,
@@ -35,6 +28,11 @@ const createRecipe = async (req, res, next) => {
     image,
     duration,
   } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const err = Object.values(errors.errors).find(el => el.msg).msg;
+    return next(new HttpError(err, 422));
+  }
 
   const createNewRecipe = new Recipe({
     title,
