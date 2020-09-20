@@ -40,8 +40,26 @@ exports.forgotPasswordValidator = [
 
 exports.resetPasswordValidator = [
   check('password')
-    .not()
-    .isEmpty()
+    .notEmpty()
     .isLength({ min: 6 })
     .withMessage('Mot de Passe doit contenir au moins 6 caractères'),
+];
+
+exports.createRecipeValidator = [
+  check('title')
+    .notEmpty()
+    .withMessage('Le titre est requis'),
+  check('ingredients')
+    .notEmpty()
+    .withMessage('Les ingrédients sont requis'),
+  check('cooking')
+    .notEmpty()
+    .withMessage('Les différentes étapes sont requises'),
+  check('difficulty').notEmpty(),
+  check('image')
+    .notEmpty()
+    .withMessage('>Une image requise'),
+  check('duration')
+    .notEmpty()
+    .withMessage('La durée est requise'),
 ];
