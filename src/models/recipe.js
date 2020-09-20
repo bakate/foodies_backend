@@ -13,15 +13,9 @@ const recipeSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  images: {
-    regularImage: {
-      type: String,
-      required: true,
-    },
-    largeImage: {
-      type: String,
-      required: true,
-    },
+  image: {
+    type: String,
+    required: true,
   },
   ingredients: {
     type: String,
@@ -43,7 +37,10 @@ const recipeSchema = new mongoose.Schema({
     enum: ['facile', 'moyen', 'difficile'],
     default: 'facile',
   },
-  cooking: { type: String, required: true },
+  cooking: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Recipe', recipeSchema);

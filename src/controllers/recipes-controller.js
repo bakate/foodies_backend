@@ -7,7 +7,7 @@ const User = require('../models/user');
 const getAllRecipes = async (req, res, next) => {
   let allRecipes;
   try {
-    allRecipes = await Recipe.find({});
+    allRecipes = await Recipe.find({}).sort({ published: -1 });
   } catch (err) {
     return next(
       new HttpError('Something went wrong. Please Try again later.', 500)
@@ -32,13 +32,13 @@ const createRecipe = async (req, res, next) => {
     cooking,
     category,
     difficulty,
-    images,
+    image,
     duration,
   } = req.body;
 
   const createNewRecipe = new Recipe({
     title,
-    images,
+    image,
     ingredients,
     published: Date.now(),
     category,
@@ -119,7 +119,6 @@ const getRecipesByUserId = async (req, res, next) => {
       new HttpError("Quelque chose s'est mal déroulée. Réessayez encore.", 500)
     );
   }
-  // if (!userWithRecipes || !userWithRecipes.recipes.length) {
   if (!userWithRecipes) {
     return next(
       new HttpError(
@@ -139,7 +138,7 @@ const updateRecipe = async (req, res, next) => {
   const {
     params: { rid },
   } = req;
-  const { title, ingredients, cooking, duration } = req.body;
+  const { title, ingredients, cooking, duration, image } = req.body;
   let recipe;
   try {
     recipe = await Recipe.findById(rid);
@@ -164,6 +163,7 @@ const updateRecipe = async (req, res, next) => {
       )
     );
   }
+  recipe.image = image;
   recipe.title = title;
   recipe.ingredients = ingredients;
   recipe.cooking = cooking;
