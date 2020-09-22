@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -246,6 +248,73 @@ const googleController = async (req, res, next) => {
   // res.redirect(`${process.env.FRONTEND_URL}?${token}`);
 };
 
+const facebookController = async (req, res, next) => {
+  const { userID, accessToken } = req.body;
+
+  const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`;
+
+  let user;
+  let token;
+  try {
+    const {
+      data: {
+        id,
+        name,
+        email,
+        picture: {
+          data: { url: avatar },
+        },
+      },
+    } = await axios.get(url);
+    user = await User.findOne({ email });
+
+    if (user) {
+      const { _id: userId, username } = user;
+      try {
+        token = jwt.sign(
+          {
+            userId,
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: '1h' }
+        );
+      } catch (err) {
+        return next(new HttpError('la connexion a échouée. Réessayez', 500));
+      }
+      return res.status(201).json({ token, userId, username, success: true });
+    }
+
+    const password = `${Date.now().toString()}${email}-&@&${Date.now()}`;
+    user = new User({
+      username: name,
+      email,
+      password,
+      avatar,
+    });
+
+    try {
+      await user.save();
+    } catch (err) {
+      return next(new HttpError('la connexion a échouée. Réessayez', 500));
+    }
+    try {
+      token = jwt.sign(
+        {
+          _id: id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+    } catch (err) {
+      return next(new HttpError('la connexion a échouée. Réessayez', 500));
+    }
+    return res.json({ token, username: name, userId: id, success: true });
+  } catch (err) {
+    return next(
+      new HttpError('La connexion avec Facebook a échouée. Réessayez', 500)
+    );
+  }
+};
 const forgotPasswordController = async (req, res, next) => {
   const { email } = req.body;
   const errors = validationResult(req);
@@ -446,4 +515,5 @@ module.exports = {
   getProfileController,
   updateProfileController,
   googleController,
+  facebookController,
 };

@@ -14,6 +14,7 @@ const {
   forgotPasswordController,
   resetPasswordController,
   getProfileController,
+  facebookController,
   updateProfileController,
 } = require('../controllers/user-controller');
 const checkAuth = require('../middleware/auth');
@@ -28,6 +29,7 @@ router.post(
   forgotPasswordController
 );
 router.post('/googlelogin', googleController);
+router.post('/facebooklogin', facebookController);
 router.post(
   '/resetpassword/:token',
   resetPasswordValidator,
