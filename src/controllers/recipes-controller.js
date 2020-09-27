@@ -14,14 +14,6 @@ const getAllRecipes = async (req, res, next) => {
     customLabels: myLabels,
   };
 
-  // const aggregateRecipes = Recipe.aggregate();
-  // Recipe.aggregatePaginate(aggregateRecipes, options).then(function(results) {
-  //   console.log(results);
-  // });
-  //   .catch(function(err) {
-  //     console.log(err);
-  //   });
-
   let allRecipes;
   try {
     const aggregateRecipes = Recipe.aggregate();
@@ -31,8 +23,9 @@ const getAllRecipes = async (req, res, next) => {
       new HttpError("Quelque chose s'est mal passée. Réessayez.", 500)
     );
   }
+
   res.json({
-    recipes: allRecipes.map(recipe => recipe.toObject({ getters: true })),
+    recipes: allRecipes,
     success: true,
   });
 };
