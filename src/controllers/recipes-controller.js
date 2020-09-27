@@ -9,7 +9,7 @@ const getAllRecipes = async (req, res, next) => {
   const { page } = req.query;
   const options = {
     page,
-    limit: 5,
+    limit: 6,
     sort: { published: -1 },
     customLabels: myLabels,
   };
@@ -32,7 +32,7 @@ const getAllRecipes = async (req, res, next) => {
     );
   }
   res.json({
-    recipes: allRecipes,
+    recipes: allRecipes.map(recipe => recipe.toObject({ getters: true })),
     success: true,
   });
 };
