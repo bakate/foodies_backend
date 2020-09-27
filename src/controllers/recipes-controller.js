@@ -1,20 +1,38 @@
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const Recipe = require('../models/recipe');
+const myLabels = require('../util/customLabels');
 const HttpError = require('../models/httpError');
 const User = require('../models/user');
 
 const getAllRecipes = async (req, res, next) => {
+  const { page } = req.query;
+  const options = {
+    page,
+    limit: 5,
+    sort: { published: -1 },
+    customLabels: myLabels,
+  };
+
+  // const aggregateRecipes = Recipe.aggregate();
+  // Recipe.aggregatePaginate(aggregateRecipes, options).then(function(results) {
+  //   console.log(results);
+  // });
+  //   .catch(function(err) {
+  //     console.log(err);
+  //   });
+
   let allRecipes;
   try {
-    allRecipes = await Recipe.find({}).sort({ published: -1 });
+    const aggregateRecipes = Recipe.aggregate();
+    allRecipes = await Recipe.aggregatePaginate(aggregateRecipes, options);
   } catch (err) {
     return next(
-      new HttpError('Something went wrong. Please Try again later.', 500)
+      new HttpError("Quelque chose s'est mal passée. Réessayez.", 500)
     );
   }
   res.json({
-    recipes: allRecipes.map(recipe => recipe.toObject({ getters: true })),
+    recipes: allRecipes,
     success: true,
   });
 };

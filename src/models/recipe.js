@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const aggregatePaginate = require('mongoose-aggregate-paginate-v2');
 
 const recipeSchema = new mongoose.Schema({
   title: {
@@ -42,5 +43,6 @@ const recipeSchema = new mongoose.Schema({
     required: true,
   },
 });
+recipeSchema.plugin(aggregatePaginate);
 
 module.exports = mongoose.model('Recipe', recipeSchema);
