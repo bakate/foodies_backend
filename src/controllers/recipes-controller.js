@@ -6,6 +6,21 @@ const HttpError = require('../models/httpError');
 const User = require('../models/user');
 
 const getAllRecipes = async (req, res, next) => {
+  let recipes;
+  try {
+    recipes = await Recipe.find({}).sort({ published: -1 });
+  } catch (err) {
+    return next(
+      new HttpError("Quelque chose s'est mal passée. Réessayez.", 500)
+    );
+  }
+  res.status(201).json({
+    recipes: recipes.map(recipe => recipe.toObject({ getters: true })),
+    success: true,
+  });
+};
+
+const getFilteredRecipes = async (req, res, next) => {
   const { page } = req.query;
   const options = {
     page,
@@ -236,9 +251,10 @@ const deleteRecipe = async (req, res, next) => {
 };
 
 module.exports = {
-  getAllRecipes,
+  getFilteredRecipes,
   getSingleRecipeById,
   getRecipesByUserId,
+  getAllRecipes,
   updateRecipe,
   deleteRecipe,
   createRecipe,
